@@ -25,11 +25,12 @@ server.use(express.json());
 // GET
 server.get('/trending' , handelGetTrnding );
 server.get('/search' , handelGetSearch);
-server.use('*',notFoundHandler);
-server.use(errorHandler);
 //POSt
 server.post('/addMovie' , addMovieHandler);
-// server.get('/getMovies' , getMovieHandler);
+server.get('/getMovies' , getMovieHandler);
+//error handler
+server.get('*',notFoundHandler);
+server.use(errorHandler);
 
 // ***************************       constructor  ********************************
 
@@ -72,7 +73,6 @@ function handelGetSearch(req , res){
         res.status(200).json(movies);
     }).catch((error)=>{
                 errorHandler(error , req , res);
-
     })
 }
 
@@ -92,13 +92,25 @@ function errorHandler(error , req , res){
 
 // /addMovie function
 function addMovieHandler(req , res){
-    console.log("hello");
+    const obj = req.body;
+    let sql = `INSERT INTO addmovies(title, release_date, poster_path, overview) VALUES($1,$2,$3,$4) RETURNING *;`
+    let values = [obj.title, obj.release_date, obj.poster_path, obj.overview];
+    client.query(sql, values).then(data =>{
+        res.status(200).json(data.rows);
+    }).catch(error =>{
+        errorHandler(error , req , res);
+    });
 }
 
 // /getMovies function
-// function getMovieHandler(req , res){
-
-// }
+function getMovieHandler(req , res){
+    let sql = `SELECT * FROM addmovies;`;
+    client.query(sql).then(data => {
+        res.status(200).json(data.rows);
+    }).catch(error =>{
+        errorHandler(error , req , res);
+    })
+}
 
 
 // ***************************    server listen     ********************************
