@@ -20,19 +20,24 @@ server.use(cors());
 const client = new pg.Client(process.env.DATABASE_URL);
 server.use(express.json());
 
-// ***************************       Points       ********************************
+// ***************************    Points Request  ********************************
 
 // GET
 server.get('/trending' , handelGetTrnding );
 server.get('/search' , handelGetSearch);
+server.get('/getMovie/:id' , getSpecifcMovieHandler)
 //POSt
 server.post('/addMovie' , addMovieHandler);
 server.get('/getMovies' , getMovieHandler);
+//DELETE
+server.delete('/DELETE/:id' , deleteHandler);
+//PUT
+server.put('/UPDATE/:id' , updateHandler);
 //error handler
 server.get('*',notFoundHandler);
 server.use(errorHandler);
 
-// ***************************       constructor  ********************************
+// ***************************    constructor     ********************************
 
 function Movi(id , title, release_date , poster_path, overview) {
     this.id = id ;
@@ -112,6 +117,42 @@ function getMovieHandler(req , res){
     })
 }
 
+// /DELETE function
+function deleteHandler(req , res){
+    const id_params = req.params.id;
+    const sql =`    DELETE FROM addmovies WHERE id=$1 RETURNING *;`;
+    let values = [id_params];
+    client.query(sql, values).then(() =>{
+        res.status(200).json(data.rows);
+    }).catch(error =>{
+        errorHandler(error , req , res);
+    });
+}
+
+// /UPDATE function
+function updateHandler(req , res){
+    const id_params = req.params.id;
+    const body_value = req.body;
+    const sql = `UPDATE addmovies SET title=$1 ,release_date=$2 ,poster_path=$3 ,overview=$4 WHERE id=$5 RETURNING *;`
+    let values = [body_value.title, body_value.release_date, body_value.poster_path, body_value.overview, id_params];
+    client.query(sql, values).then(data =>{
+        res.status(200).json(data.rows);
+    }).catch(error =>{
+        errorHandler(error , req , res);
+    });
+}
+
+// /getMovie
+function getSpecifcMovieHandler(req , res){
+    const id_params = req.params.id;
+    const sql = `SELECT * FROM addmovies WHERE id = $1;`;
+    let values = [id_params];
+    client.query(sql, values).then(data => {
+        res.status(200).json(data.rows);
+    }).catch(error => {
+        errorHandler(error, req, res);
+    });
+}
 
 // ***************************    server listen     ********************************
 
