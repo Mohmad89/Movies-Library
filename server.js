@@ -17,6 +17,7 @@ const APIKEY = process.env.APIKEY;
 
 const server = express();
 server.use(cors());
+//we do this object to ssl protocol
 const client = new pg.Client({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false }
